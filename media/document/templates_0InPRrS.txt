@@ -1,0 +1,599 @@
+base.html
+
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+    integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+  <title>Xaridlar</title>
+
+  <style>
+    nav{
+      background-color: green;
+    }
+    .one-edge-shadow {
+              box-shadow: 0 8px 2px -5px rgb(246, 245, 245);
+}
+.display-8{
+  font-weight: 200;
+  font-size: 30px;
+  font-colour: $teal-200;
+}
+  </style>
+</head>
+
+<body>
+  <!-- navbar -->
+
+<nav class="one-edge-shadow
+  navbar navbar-light
+  sticky-top navbar 
+  navbar-expand-lg
+  text-white">
+    <a class="navbar-brand ms-3 text-dark " href="/">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+
+    <img style="width:50px;height:50px,color:text-light;">Xaridlar</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item active">
+          <a class="nav-link" href="/store"> <span class="sr-only">(current)</span></a>
+        </li>
+
+          </ul>
+
+
+
+
+      <ul class=" navbar-nav my-2 my-lg-0">
+
+        <li class="nav-item active">
+          <a class="nav-link" href="/cart">Savat 
+            <span class="badge badge-success">{{request.session.cart.keys|length}}</span>
+            <span class="sr-only">(current)</span></a>
+        </li>
+
+        {% if request.session.customer %}
+        
+        <li class="nav-item active ">
+          <a class="nav-link" href="/orders">Yetkazmalar<span class="sr-only">(current)</span></a>
+        </li>
+        <li class="nav-item active ">
+          <a class="nav-link" href="/logout">Chiqish<span class="sr-only">(current)</span></a>
+        </li>
+        {% else %}
+       
+        <li class="nav-item active">
+          <a class="nav-link" href="/signup">Ro'yxatdan o'tish<span class="sr-only">(current)</span></a>
+        </li>
+        <li class="nav-item active">
+          <a class="nav-link" href="/login">Kirish<span class="sr-only">(current)</span></a>
+        </li>
+        {% endif %}
+
+
+      </ul>
+
+
+    </div>
+  </nav>
+  <!---->
+
+    {% block content %}{% endblock %}
+
+  
+
+  <!-- Optional JavaScript -->
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+    integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+    integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+    crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+    integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+    crossorigin="anonymous"></script>
+</body>
+
+</html>
+
+cart.html
+
+{% extends 'base.html' %}
+
+
+{% block content %}
+{% load cart %}
+{% load custom_filter %}
+<div class="container-fluid">
+   <div class="border rounded">
+        <a href="{% url 'store' %}" class="display-4 mt-3 pl-4 ml-4 btn btn-success rounded-pill">Xaridda davom etish </a>
+        <hr>
+        <div class='table-responsive'>
+          <table class="table">
+              <thead>
+                  <tr>
+                      <th></th>
+                      <th>Rasmi</th>
+                      <th>Nomi</th>
+                      <th>Narxi</th>
+                      <th>Miqdori</th>
+                      <th>Jami narxi</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  
+                  {% for product in products %}
+                  <tr>
+                      <td>{{forloop.counter}}</td>
+                      <td><img style="height: 80px;" class="" src="{{product.image.url}}" alt=""></td>
+                      <td>{{product.name}}</td>
+                      <td>{{product.price|currency}}</td>
+                      <td>{{product|cart_quantity:request.session.cart}}</td>
+                      <td>{{product|price_total:request.session.cart|currency}} sum</td>
+                  </tr>
+
+                  {% endfor %}
+                
+              </tbody>
+
+              <tfoot>
+                  <tr>
+                      <th colspan="4"></th>
+                      <th class="" colspan="">Jami narxi</th>
+                      <th>{{products|total_cart_price:request.session.cart|currency}}</th>
+                  </tr>
+                  <tr>
+                    <th colspan="4"></th>
+                    <th class="" colspan="">Yetkazib berish uchun:</th>
+                    <th id="calculate_delivery">{{products|total_cart_price:request.session.cart}}+5000</th>
+                </tr>
+              </tfoot>
+          </table>
+        </div>
+        <hr>
+   </div>
+   <div class="row py-3">
+    <div class='col-6'>
+      <a href="#" data-toggle="modal" data-target="#exampleModal" class="btn btn-outline-success border rounded  col-lg-3 float-right">Yetkazib berish</a>
+    </div>
+    <div class='col-6'>
+      <a href="#" data-toggle="modal" data-target="#exampleModal2" class="btn btn-outline-success border rounded  col-lg-3 float-right">Olib ketish</a>
+    </div>
+</div>
+</div>
+
+
+<!-- modal -->
+
+  <!-- Modal -->
+  <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">
+              Qo'shimcha ma'lumot
+          </h5>
+          <hr>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="m-2 p-3">
+            <form action="/check-out" method="POST">
+                {% csrf_token %}
+                <small style="color:red;">Saqlash tugmasini bossangiz buyurtma yetkazib beriladi</small>
+                <div class="form-group">
+                  <label for="">Manzilingiz</label>
+                  <input type="text" name="address" id="" class="form-control" placeholder="" aria-describedby="helpId" required>
+                  
+                </div>
+                <div class="form-group">
+                    <label for="">Telefon raqamingiz</label>
+                    <input type="text" name="phone" id="" class="form-control" placeholder="" aria-describedby="helpId" required>
+                </div>
+                <div class="form-check">
+                  <input type="hidden" name="delivery" value="True">
+                  <input class="form-check-input" type="checkbox" value="" id="flexCheckCheckedDisabled" checked disabled>
+                  <label style="color: green;" class="form-check-label" for="flexCheckCheckedDisabled">
+                    Uyingizgacha yetkazib beriladi
+                  </label>
+                </div>
+                  <input type="submit" class="btn float-right btn-outline-success col-lg-6" value="Saqlash">
+            </form>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="exampleModal2" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">
+              Olib ketish <small>Yetkazib berish ximati ham mavjud</small>
+          </h5>
+          <hr>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="m-2 p-3">
+            <form action="/check-out" method="POST">
+              {% csrf_token %}
+                <div>
+                  <small style="color:red;">Buyurtma berish uchun Tasdiqlash tugmasini bosing</small>
+                  <div class="form-group">
+                    <label for="">Ism</label>
+                    <input type="text" name="address" id="" class="form-control" placeholder="" aria-describedby="helpId" required>
+                    
+                  </div>
+                  <div class="form-group">
+                      <label for="">Telefon raqamingiz</label>
+                      <input type="text" name="phone" id="" class="form-control" placeholder="" aria-describedby="helpId" required>
+                  </div>
+                  
+                  <div class="form-check">
+                    <input type="hidden" name="delivery" value="False">
+                    <input class="form-check-input" type="checkbox" value="" id="flexCheckDisabled" disabled>
+                    <label style="color:red;" class="form-check-label" for="flexCheckDisabled">
+                      Yetkazib berilmaydi !<br><br>
+                    </label>
+                  </div>
+                    <input type="submit" class="btn float-right btn-outline-success col-lg-6" value="Tasdiqlash">
+                  <h5>Bog'ishamol ko'chasi 12-uy dan olib ketishingiz mumkin</h5>
+                  <h5>Telefon: +998 99 032 78 98</h5>
+                  <h5>Jami narxi: {{products|total_cart_price:request.session.cart|currency}} sum</h5>
+                  <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3054.1983078681405!2d69.28148587596421!3d41.33738079909571!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x38ae8b5267ba5c95%3A0x8d5f1236002730a6!2sYunusabad%20District%2C%20Tashkent%2C%20Uzbekistan!5e1!3m2!1sen!2s!4v1699410809440!5m2!1sen!2s" width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+              </form>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(showPosition);
+    } else { 
+      console.log("Iltimos google chrome brauzeridan kiring chunki sizning hozirgi manzilingizni topa olmadik");
+    }
+    
+    function showPosition(position) {
+      console.log("Latitude: " + position.coords.latitude + 
+      "\nLongitude: " + position.coords.longitude); 
+    
+      // hozirgi position ni olish
+      var distance = getDistanceFromLatLonInKm({{db1.x}}, {{db1.y}}, position.coords.latitude, position.coords.longitude);
+      // console.log(distance * 50);
+      document.getElementById("calculate_delivery").innerHTML = Math.round(distance*50)+{{products|total_cart_price:request.session.cart|currency}};
+    }
+    
+    function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+      var R = 6371; // Yer radiusi km da
+      var dLat = deg2rad(lat2-lat1);  // deg2rad 
+      var dLon = deg2rad(lon2-lon1); 
+      var a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) + 
+        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2)
+        ; 
+      var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+      var d = R * c; // masofa km da
+      return d;
+    }
+    
+    function deg2rad(deg) {
+      return deg * (Math.PI/180)
+    }    
+  </script>
+
+{% endblock %}
+
+
+index.html
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load cart %}
+{% load custom_filter %}
+<!-- body -->
+<div class="container-fluid mt-3">
+	<div class="row">
+
+
+		<!-- filter -->
+
+		<div class="col-lg-3 mx-auto py-5">
+			<div class="list-group">
+
+				<a href="/" class="list-group-item list-group-item-action btn btn-outline-success">Barcha turdagilar</a>
+
+				{% for category in categories %}
+				<a href="/?category={{category.id}}"
+					class="list-group-item list-group-item-action btn btn-outline-success ">{{category.name}}</a>
+				{% endfor %}
+			</div>
+		</div>
+
+		<!-- all products -->
+		<div id='products' class="col-lg-9 mx-auto">
+			<div class="row mx-auto">
+				{% for product in products %}
+				<div class="card mx-auto mb-3" id={{product.id}} style="width: 18rem;">
+					<img style="width: 100%; height:10rem;" class="card-img-top" src="{{product.image.url}}" alt="Card image cap">
+					<div class="card-body container">
+						<div class="row">
+							<div class="col-6">
+								<p class="card-title">{{product.name}}</p>
+							</div>
+							<div class="col-6">
+								<p style="float:right;"><b>{{product.price|currency}} sum</b></p>
+							</div>
+						</div>
+						<!-- {{product | is_in_cart:request.session.cart }} -->
+					</div>
+
+					<div class="card-footer p-0 no-gutters">
+
+						{% if product|is_in_cart:request.session.cart %}
+						<div class="row no-gutters">
+							<form action="/#{{product.id}}" class="col-2 " method="post">
+								{% csrf_token %}
+								<input hidden type="text" name='product' value='{{product.id}}'>
+								<input hidden type="text" name='remove' value='True'>
+								<input type="submit" value=" - " class="btn btn-block btn-success border-right">
+							</form>
+							<div class="text-center col btn btn-success">{{product|cart_quantity:request.session.cart}} Savatda</div>
+							<form action="/#{{product.id}}" class="col-2 " method="post">
+								{% csrf_token %}
+								<input hidden type="text" name='product' value='{{product.id}}'>
+								<input type="submit" value=" + " class="btn btn-block btn-success border-left">
+							</form>
+						</div>
+						{% else %}
+						<form action="/#{{product.id}}" method="POST" class="btn-block">
+							{% csrf_token %}
+							<input hidden type="text" name='product' value='{{product.id}}'>
+							<input type="submit" class="float-right btn btn-success form-control"
+								value="Savatga qo'shish">
+						</form>
+						{% endif %}
+
+					</div>
+
+				</div>
+				{% endfor %}
+			</div>
+		</div>
+	</div>
+</div>
+
+{% endblock %}
+
+login.html
+
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+    <div class="p-3 m-3">
+        <div class="col-lg-5 rounded mx-auto border pt-4">
+            <div class="text-center col">
+            
+                
+            <hr>
+            </div>
+            <h3 class="alert alert-light rounded-pill" style="text-align:center" >Kirish</h3>
+            <form action="/login" method="POST">
+                
+                {% csrf_token %}
+
+                {% if error%}
+                <div class="alert alert-danger" role="alert">
+                    {{error}}
+                </div>
+                {% endif %}
+                <!-- email -->
+                <div class="form-group">
+                    <label for="">Email</label>
+                    <input required type="email" name="email" id=""
+                    value="{{values.email}}" 
+                    class=" form-control-sm form-control" placeholder="email_nomi@gmail.com">
+                </div>
+
+
+                <!-- password -->
+                <div class="form-group">
+                    <label for="">Parol</label>
+                    <input type="password" 
+                    name="password" 
+                    id=""
+                     class="form-control form-control-sm" >
+                </div>
+
+                <hr>
+                <button type="submit" class="btn btn-sm btn-success col-lg-12">Kirish</button>
+
+
+                
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+orders.html
+
+{% extends 'base.html' %}
+
+
+{% block content %}
+{% load cart %}
+{% load custom_filter %}
+<div class="container-fluid">
+   <div class="border rounded">
+        <p>Sizning buyurtmalaringiz</p>
+        <hr>
+        <div class='table-responsive'>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        <th>Nomi</th>
+                        <th>Vaqti</th>
+                        <th>Narxi</th>
+                        <th>Miqdori</th>
+                        <th>Umumiy narxi</th>
+                        <th>Holati</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    {% for order in orders %}
+                    <tr>
+                        <td>{{forloop.counter}}</td>
+                        <td><img style="height: 70px; width: 5rem;" class="" src="{{order.product.image.url}}" alt=""></td>
+                        <td>{{order.product.name}}</td>
+                        <td>{{order.date}}</td>
+                        <td>{{order.price|currency}}</td>
+                        <td>{{order.quantity}} ta</td>
+                        <td>{{order.quantity|multiply:order.price|currency}}</td>
+                        {% if order.status %}
+                        <td><small class="badge badge-success">Yetkazildi</small></td>
+                        {%else%}
+                        <td><small class="badge badge-warning">Tayyorlanmoqda</small></td>
+                        {% endif %}
+                    </tr>
+
+                    {% endfor %}
+                
+                </tbody>
+
+            </table>
+        </div>
+       
+   </div>
+</div>
+
+
+
+
+
+{% endblock %}
+
+signup.html
+
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container mt-4">
+    
+    <div class="p-3 m-3">
+
+        
+        <div class="col-lg-5 rounded mx-auto border pt-4">
+            <div class="text-center col">
+            
+                
+            <!-- <hr> -->
+            <hr>
+            </div>
+            <h5 class="alert alert-success rounded-pill" style="text-align:center">Ro'yxatdan o'tish</h5>
+            <form action="/signup" method="POST">
+                
+                {% csrf_token %}
+
+                {% if error%}
+                <div class="alert alert-danger" role="alert">
+                    {{error}}
+                </div>
+                {% endif %}
+                <!-- firstname -->
+                <div class="form-group">
+                    <label for="">Ism</label>
+                    <input type="text" name="firstname"
+                     id="" value="{{values.first_name}}" class="form-control form-control-sm" 
+                     placeholder="">
+                </div>
+
+                <!-- last name -->
+                <div class="form-group">
+                    <label for="">Familiya</label>
+                    <input type="text" name="lastname" 
+                    id="" value="{{values.last_name}}" class="form-control form-control-sm"
+                    >
+                </div>
+
+                <!-- phone -->
+                <div class="form-group">
+                    <label for="">Telefon raqam</label>
+                    <input type="text" name="phone" 
+                    id="" class="form-control form-control-sm"
+                    value="{{values.phone}}"
+                    placeholder="99 032 78 98"
+                    >
+                </div>
+                <!-- email -->
+                <div class="form-group">
+                    <label for="">Email</label>
+                    <input required type="email" name="email" id=""
+                    value="{{values.email}}" 
+                    class=" form-control-sm form-control" placeholder="email_nomi@gmail.com">
+                </div>
+
+
+                <!-- password -->
+                <div class="form-group">
+                    <label for="">Parol</label>
+                    <input type="password" 
+                    name="password" 
+                    id=""
+                     class="form-control form-control-sm">
+                </div>
+
+                <!--Checkme button-->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="exampleCheck1">
+                    <label class="form-check-label d-grid gap-2" for="exampleCheck1">Qurilmada parolni saqlab qolish</label>
+                </div>
+                <hr>
+                <button type="submit" class="btn btn-sm btn-success col-lg-12">Saqlash</button>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

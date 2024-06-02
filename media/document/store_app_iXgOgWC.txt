@@ -1,0 +1,510 @@
+
+
+store/middleware
+
+from django.shortcuts import redirect
+
+def auth_middleware(get_response):
+    # One-time configuration and initialization.
+
+    def middleware(request):
+        returnUrl = request.META['PATH_INFO']
+        if not request.session.get('customer'):
+           return redirect(f'login?return_url={returnUrl}')
+
+        response = get_response(request)
+        return response
+
+    return middleware
+	
+store/models.py
+
+from django.db import models
+
+class Category(models.Model):
+    name= models.CharField(max_length=50, verbose_name="Kategoriya nomi")
+
+    @staticmethod
+    def get_all_categories():
+        return Category.objects.all()
+
+    def __str__(self):
+        return self.name
+    class Meta:
+        verbose_name = "Kategoriya"
+        verbose_name_plural = "Kategoriya"
+    
+    def __str__(self):
+        return self.name
+		
+store/cordinate.py
+from django.db import models
+
+class Cordinate(models.Model):
+    x = models.CharField(max_length=300)
+    y = models.CharField(max_length=300)
+
+    def __str__(self):
+        return f"{self.x}, {self.y}"
+
+    class Meta:
+        verbose_name = "Yetkazib beruvchi manzili"
+        verbose_name_plural = "Yetkazib beruvchi manzili"
+		
+store/customer.py
+
+from django.db import models
+
+class Customer(models.Model):
+    first_name = models.CharField(max_length=50, verbose_name="Ism")
+    last_name = models.CharField (max_length=50, verbose_name="Familiya")
+    phone = models.CharField(max_length=30,verbose_name="Telefon raqam")
+    email=models.EmailField()
+    password = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
+
+    #to save the data
+    def register(self):
+        self.save()
+
+
+    @staticmethod
+    def get_customer_by_email(email):
+        try:
+            return Customer.objects.get(email= email)
+        except:
+            return False
+
+
+    def isExists(self):
+        if Customer.objects.filter(email = self.email):
+            return True
+
+        return False
+    
+    class Meta:
+        verbose_name = "Mijoz"
+        verbose_name_plural = "Mijozlar"
+
+store/orders.py
+
+from django.db import models
+from .product import Products
+from .customer import Customer
+import datetime
+
+
+class Order(models.Model):
+    product = models.ForeignKey(Products,
+                                on_delete=models.CASCADE,verbose_name="Mahsulot")
+    customer = models.ForeignKey(Customer,
+                                 on_delete=models.CASCADE, verbose_name="Mijoz")
+    quantity = models.IntegerField(default=1,verbose_name="Miqdori")
+    price = models.IntegerField(verbose_name="Narxi")
+    address = models.CharField (max_length=50, default='', blank=True, verbose_name="Manzil")
+    phone = models.CharField (max_length=50, default='', blank=True, verbose_name="Telefon raqami")
+    date = models.DateField (default=datetime.datetime.today, verbose_name="Buyurtma berilgan vaqt")
+    status = models.BooleanField (default=False,verbose_name="Buyurtma topshirildimi")
+    delivery = models.BooleanField(default=False, verbose_name="Yetkazib berish ximati bormi")
+    def placeOrder(self):
+        self.save()
+
+    @staticmethod
+    def get_orders_by_customer(customer_id):
+        return Order.objects.filter(customer=customer_id).order_by('-date')
+
+    class Meta:
+        verbose_name = "Buyurtma"
+        verbose_name_plural = "Buyurtmalar"
+		
+store/product.py
+
+from django.db import models
+from .product import Products
+from .customer import Customer
+import datetime
+
+
+class Order(models.Model):
+    product = models.ForeignKey(Products,
+                                on_delete=models.CASCADE,verbose_name="Mahsulot")
+    customer = models.ForeignKey(Customer,
+                                 on_delete=models.CASCADE, verbose_name="Mijoz")
+    quantity = models.IntegerField(default=1,verbose_name="Miqdori")
+    price = models.IntegerField(verbose_name="Narxi")
+    address = models.CharField (max_length=50, default='', blank=True, verbose_name="Manzil")
+    phone = models.CharField (max_length=50, default='', blank=True, verbose_name="Telefon raqami")
+    date = models.DateField (default=datetime.datetime.today, verbose_name="Buyurtma berilgan vaqt")
+    status = models.BooleanField (default=False,verbose_name="Buyurtma topshirildimi")
+    delivery = models.BooleanField(default=False, verbose_name="Yetkazib berish ximati bormi")
+    def placeOrder(self):
+        self.save()
+
+    @staticmethod
+    def get_orders_by_customer(customer_id):
+        return Order.objects.filter(customer=customer_id).order_by('-date')
+
+    class Meta:
+        verbose_name = "Buyurtma"
+        verbose_name_plural = "Buyurtmalar"
+		
+store/templatetags.py
+
+from django import template
+
+register = template.Library ()
+
+
+@register.filter (name='is_in_cart')
+def is_in_cart(product, cart):
+    keys = cart.keys ()
+    for id in keys:
+        if int (id) == product.id:
+            return True
+    return False;
+
+
+@register.filter (name='cart_quantity')
+def cart_quantity(product, cart):
+    keys = cart.keys ()
+    for id in keys:
+        if int (id) == product.id:
+            return cart.get (id)
+    return 0;
+
+
+@register.filter (name='price_total')
+def price_total(product, cart):
+    return product.price * cart_quantity (product, cart)
+
+
+@register.filter (name='total_cart_price')
+def total_cart_price(products, cart):
+    sum = 0;
+    for p in products:
+        sum += price_total (p, cart)
+
+    return sum
+
+
+store/custom_filter.py
+
+from django import template
+
+register = template.Library()
+
+@register.filter(name='currency')
+def currency(number):
+    return str(number)
+
+@register.filter(name='multiply')
+def multiply(number , number1):
+    return number * number1
+
+store/views/admin.py
+
+from django.contrib import admin
+from .models.product import Products
+from .models.category import Category
+from .models.customer import Customer
+from .models.orders import Order
+from .models.cordinate import Cordinate
+
+admin.site.register(Cordinate)
+
+class AdminProduct(admin.ModelAdmin):
+    list_display = ['name', 'price', 'category']
+
+
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ['name']
+
+# Register your models here.
+admin.site.register(Products,AdminProduct)
+admin.site.register(Category)
+
+@admin.register(Customer)
+class AdminViewCustomer(admin.ModelAdmin):
+    search_fields = ['first_name','last_name','phone']
+    list_display = ['first_name','last_name','phone','email']
+    
+@admin.register(Order)
+class AdminViewOrder(admin.ModelAdmin):
+    search_fields = ['address','phone','customer']
+    list_display = ['customer','product','quantity','price','date','status','delivery']
+
+    # ,'product','phone','email','quantity','price','phone','date'
+	
+urls.py
+
+from django.contrib import admin
+from django.urls import path
+from .views.home import Index , store
+from .views.signup import Signup
+from .views.login import Login , logout
+from .views.cart import Cart
+from .views.checkout import CheckOut
+from .views.orders import OrderView
+from .middlewares.auth import  auth_middleware
+
+
+urlpatterns = [
+    path('', Index.as_view(), name='homepage'),
+    path('store', store , name='store'),
+
+    path('signup', Signup.as_view(), name='signup'),
+    path('login', Login.as_view(), name='login'),
+    path('logout', logout , name='logout'),
+    path('cart', auth_middleware(Cart.as_view()) , name='cart'),
+    path('check-out', CheckOut.as_view() , name='checkout'),
+    path('orders', auth_middleware(OrderView.as_view()), name='orders'),
+
+]
+
+
+cart.py
+
+from django.shortcuts import render , redirect
+
+from django.contrib.auth.hashers import  check_password
+from store.models.customer import Customer
+from django.views import  View
+from store.models.product import Products
+
+class Cart(View):
+    def get(self , request):
+        ids = list(request.session.get('cart').keys())
+        products = Products.get_products_by_id(ids)
+        return render(request , 'cart.html' , {'products' : products} )
+
+
+
+check-out.py
+from django.shortcuts import render, redirect
+
+from django.contrib.auth.hashers import check_password
+from store.models.customer import Customer
+from django.views import View
+
+from store.models.product import Products
+from store.models.orders import Order
+
+
+class CheckOut(View):
+    def post(self, request):
+        address = request.POST.get('address')
+        phone = request.POST.get('phone')
+        delivery = request.POST.get('delivery')
+        customer = request.session.get('customer')
+        cart = request.session.get('cart')
+        products = Products.get_products_by_id(list(cart.keys()))
+
+        for product in products:
+            order = Order(customer=Customer(id=customer),
+                          product=product,
+                          price=product.price,
+                          address=address,
+                          phone=phone,
+                          delivery=delivery,
+                          quantity=cart.get(str(product.id)))
+            order.save()
+        request.session['cart'] = {}
+
+        return redirect('orders')
+
+home.py
+
+from django.shortcuts import render , redirect , HttpResponseRedirect
+import requests
+from store.models.product import Products
+from store.models.category import Category
+from django.views import View
+
+#! Foydalanuvchining IP adresini olish uchun 
+
+
+# ! 
+
+# Create your views here.
+class Index(View):
+
+    def post(self , request):
+        product = request.POST.get('product')
+        remove = request.POST.get('remove')
+        cart = request.session.get('cart')
+        if cart:
+            quantity = cart.get(product)
+            if quantity:
+                if remove:
+                    if quantity<=1:
+                        cart.pop(product)
+                    else:
+                        cart[product]  = quantity-1
+                else:
+                    cart[product]  = quantity+1
+
+            else:
+                cart[product] = 1
+        else:
+            cart = {}
+            cart[product] = 1
+
+        request.session['cart'] = cart
+        return redirect('homepage')
+
+
+
+    def get(self , request):
+        return HttpResponseRedirect(f'/store{request.get_full_path()[1:]}')
+
+def store(request):
+    cart = request.session.get('cart')
+    if not cart:
+        request.session['cart'] = {}
+    products = None
+    categories = Category.get_all_categories()
+    categoryID = request.GET.get('category')
+    if categoryID:
+        products = Products.get_all_products_by_categoryid(categoryID)
+    else:
+        products = Products.get_all_products();
+
+    data = {}
+    data['products'] = products
+    data['categories'] = categories
+
+    #! User IP
+    #! 
+
+
+    return render(request, 'index.html', data)
+
+
+login.py
+
+from django.shortcuts import render , redirect , HttpResponseRedirect
+from django.contrib.auth.hashers import  check_password
+from store.models.customer import Customer
+from django.views import View
+
+
+class Login(View):
+    return_url = None
+
+    def get(self, request):
+        Login.return_url = request.GET.get ('return_url')
+        return render (request, 'login.html')
+
+    def post(self, request):
+        email = request.POST.get ('email')
+        password = request.POST.get ('password')
+        customer = Customer.get_customer_by_email (email)
+        error_message = None
+        if customer:
+            flag = check_password (password, customer.password)
+            if flag:
+                request.session['customer'] = customer.id
+
+                if Login.return_url:
+                    return HttpResponseRedirect (Login.return_url)
+                else:
+                    Login.return_url = None
+                    return redirect ('homepage')
+            else:
+                error_message = "Email yoki parol noto'g'ri"
+        else:
+            error_message = "Email yoki parol noto'g'ri"
+
+        return render (request, 'login.html', {'error': error_message})
+
+def logout(request):
+    request.session.clear()
+    return redirect('login')
+
+
+orders.py
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.hashers import check_password
+from store.models.customer import Customer
+from django.views import View
+from store.models.product import Products
+from store.models.orders import Order
+from store.middlewares.auth import auth_middleware
+
+class OrderView(View):
+
+
+    def get(self , request ):
+        customer = request.session.get('customer')
+        orders = Order.get_orders_by_customer(customer)
+        return render(request , 'orders.html'  , {'orders' : orders})
+
+signup.py
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.hashers import make_password
+from store.models.customer import Customer
+from django.views import View
+
+
+class Signup (View):
+    def get(self, request):
+        return render (request, 'signup.html')
+
+    def post(self, request):
+        postData = request.POST
+        first_name = postData.get ('firstname')
+        last_name = postData.get ('lastname')
+        phone = postData.get ('phone')
+        email = postData.get ('email')
+        password = postData.get ('password')
+        # validation
+        value = {
+            'first_name': first_name,
+            'last_name': last_name,
+            'phone': phone,
+            'email': email
+        }
+        error_message = None
+
+        customer = Customer (first_name=first_name,
+                             last_name=last_name,
+                             phone=phone,
+                             email=email,
+                             password=password)
+        error_message = self.validateCustomer (customer)
+
+        if not error_message:
+            customer.password = make_password (customer.password)
+            customer.register ()
+            return redirect ('homepage')
+        else:
+            data = {
+                'error': error_message,
+                'values': value
+            }
+            return render (request, 'signup.html', data)
+
+    def validateCustomer(self, customer):
+        error_message = None
+        if (not customer.first_name):
+            error_message = "Ismingizni kiriting"
+        elif len (customer.first_name) < 3:
+            error_message = "Ism haqiqyga o'xshamayabdi kamida 4 ta harfdan ko'p bo'lishi kerak"
+        elif not customer.last_name:
+            error_message = "Familiyangizni kiriting"
+        elif len (customer.last_name) < 3:
+            error_message = "Familiya haqiqyga o'xshamayabdi kamida 4 ta harfdan ko'p bo'lishi kerak"
+        elif not customer.phone:
+            error_message = "Telefon raqamingizni kiriting"
+        elif len (customer.phone) < 9:
+            error_message = "Telefon raqam kamida 9 ta raqamdan iborat bo'ladi !"
+        elif len (customer.password) < 5:
+            error_message = "Parolingiz eng kamida 5 ta belgidan iborat bo'lsin"
+        elif customer.isExists ():
+            error_message = 'Bu email allaqachon ishlatilgan..'
+
+        return error_message
