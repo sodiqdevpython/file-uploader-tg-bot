@@ -4,7 +4,7 @@ import requests
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ConversationHandler, ContextTypes
 
-API_URL = "https://4cb8-82-215-89-79.ngrok-free.app/"
+API_URL = "https://fileuploadertgbot.pythonanywhere.com/"
 
 FIO, PROJECT_NAME, TEL_NUMBER = range(3)
 
